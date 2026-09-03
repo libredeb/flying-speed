@@ -5,6 +5,7 @@
 #include "Util.hpp"
 
 #include <algorithm>
+#include <cmath>
 
 namespace flying {
 namespace {
@@ -115,11 +116,33 @@ void Pipes::spawn() {
     const float minCenter = kGapMargin + p.gapSize * 0.5f;
     const float maxCenter = static_cast<float>(kLogicalH) - kGapMargin - p.gapSize * 0.5f;
     p.gapCenter = randFloat(minCenter, maxCenter);
+    p.baseGapCenter = p.gapCenter;
     p.color = nextColor();
     p.x = spawnX_;
     p.scored = false;
-    pairs_.push_back(p);
 
+    const int allowedMovers = (kMovingPipeInterval > 0 && difficultyScore_ >= kMovingPipeInterval)
+                                  ? std::min(difficultyScore_ / kMovingPipeInterval, kMaxMovingPipes)
+                                  : 0;
+    if (allowedMovers > 0) {
+        int currentMovers = 0;
+        for (const auto& ep : pairs_) {
+            if (ep.moving) ++currentMovers;
+        }
+        if (currentMovers < allowedMovers) {
+            p.moving = true;
+            p.moveSpeed = randFloat(kMovingPipeSpeedMin, kMovingPipeSpeedMax);
+            p.moveAmplitude = randFloat(kMovingPipeAmpMin, kMovingPipeAmpMax);
+            p.movePhase = randFloat(0.f, 6.2831853f);
+
+            const float ampMargin = p.moveAmplitude + p.gapSize * 0.5f + kGapMargin;
+            p.baseGapCenter = clampf(p.baseGapCenter, ampMargin,
+                                     static_cast<float>(kLogicalH) - ampMargin);
+            p.gapCenter = p.baseGapCenter + std::sin(p.movePhase) * p.moveAmplitude;
+        }
+    }
+
+    pairs_.push_back(p);
     spawnX_ += randFloat(kPipeMinSpacing, kPipeMaxSpacing);
 }
 
@@ -133,6 +156,10 @@ void Pipes::update(float dt, bool moving, int score) {
     spawnX_ -= dx;
     for (auto& p : pairs_) {
         p.x -= dx;
+        if (p.moving) {
+            p.movePhase += p.moveSpeed * dt;
+            p.gapCenter = p.baseGapCenter + std::sin(p.movePhase) * p.moveAmplitude;
+        }
     }
 
     const float width = scaledW();

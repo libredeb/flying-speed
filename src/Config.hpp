@@ -36,6 +36,13 @@ constexpr float kBlueHeadAlignPx = -2.f;
 constexpr int kOpeningGreenPipes = 3;
 constexpr int kMinGreensBetweenSpecials = 3;
 
+constexpr int kMovingPipeInterval = 50;
+constexpr int kMaxMovingPipes = 6;
+constexpr float kMovingPipeSpeedMin = 1.2f;
+constexpr float kMovingPipeSpeedMax = 2.4f;
+constexpr float kMovingPipeAmpMin = 40.f;
+constexpr float kMovingPipeAmpMax = 80.f;
+
 // Head / body content insets measured from the 326px pipe textures.
 constexpr float kHeadPadL = 10.f / 326.f;
 constexpr float kHeadPadR = 10.f / 326.f;

@@ -48,7 +48,8 @@ brew install cmake sdl2 sdl2_image sdl2_ttf sdl2_mixer pkg-config
 ## Build and run
 
 ```bash
-make            # configure + build
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr
+cmake --build build -j1
 ./build/flying-speed
 ```
 
@@ -98,6 +99,7 @@ Assets are looked up in this order:
 
 ## Sound
 
-- `assets/background.wav` looping background music (low volume)
+- `assets/background.ogg` looping background music (low volume)
 - `assets/flap.flac` when flying (Space)
+- `assets/pass.mp3` when passing through a pipe
 - `assets/collide.wav` when hitting a pipe or the screen edge

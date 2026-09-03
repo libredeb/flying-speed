@@ -2,9 +2,7 @@
 
 #include <string>
 
-struct Mix_Chunk;
-struct _Mix_Music;
-typedef struct _Mix_Music Mix_Music;
+#include <SDL_mixer.h>
 
 namespace flying {
 
@@ -27,6 +25,7 @@ public:
 private:
     Mix_Chunk* flap_ = nullptr;
     Mix_Chunk* collide_ = nullptr;
+    Mix_Chunk* pass_ = nullptr;
     Mix_Music* music_ = nullptr;
     Mix_Chunk* musicChunk_ = nullptr;
     int musicChannel_ = -1;

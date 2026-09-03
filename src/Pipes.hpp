@@ -26,6 +26,11 @@ private:
         float gapSize = 0;
         PipeColor color = PipeColor::Green;
         bool scored = false;
+        bool moving = false;
+        float baseGapCenter = 0;
+        float moveAmplitude = 0;
+        float moveSpeed = 0;
+        float movePhase = 0;
     };
 
     void spawn();

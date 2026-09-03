@@ -14,9 +14,9 @@ constexpr int kMusicVolume = 42;  // ~33% so flap/collide stay in front
 }  // namespace
 
 bool Audio::init(const std::string& assetsRoot) {
-    const int want = MIX_INIT_FLAC;
+    const int want = MIX_INIT_FLAC | MIX_INIT_MP3;
     if ((Mix_Init(want) & want) != want) {
-        std::fprintf(stderr, "Aviso Mix_Init FLAC: %s\n", Mix_GetError());
+        std::fprintf(stderr, "Aviso Mix_Init FLAC+MP3: %s\n", Mix_GetError());
     }
 
     if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) != 0) {
@@ -31,21 +31,29 @@ bool Audio::init(const std::string& assetsRoot) {
 
     const std::string flapPath = assetsRoot + "/flap.flac";
     const std::string collidePath = assetsRoot + "/collide.wav";
-    const std::string musicPath = assetsRoot + "/background.wav";
+    const std::string passPath = assetsRoot + "/pass.mp3";
+    const std::string musicPath = assetsRoot + "/background.ogg";
 
     flap_ = Mix_LoadWAV(flapPath.c_str());
     collide_ = Mix_LoadWAV(collidePath.c_str());
+    pass_ = Mix_LoadWAV(passPath.c_str());
     if (!flap_) {
         std::fprintf(stderr, "No se pudo cargar %s: %s\n", flapPath.c_str(), Mix_GetError());
     }
     if (!collide_) {
         std::fprintf(stderr, "No se pudo cargar %s: %s\n", collidePath.c_str(), Mix_GetError());
     }
+    if (!pass_) {
+        std::fprintf(stderr, "No se pudo cargar %s: %s\n", passPath.c_str(), Mix_GetError());
+    }
     if (flap_) {
         Mix_VolumeChunk(flap_, kSfxVolume);
     }
     if (collide_) {
         Mix_VolumeChunk(collide_, kSfxVolume);
+    }
+    if (pass_) {
+        Mix_VolumeChunk(pass_, kSfxVolume);
     }
 
     music_ = Mix_LoadMUS(musicPath.c_str());
@@ -67,8 +75,8 @@ bool Audio::init(const std::string& assetsRoot) {
         }
     }
 
-    ready_ = (flap_ != nullptr) || (collide_ != nullptr) || (music_ != nullptr) ||
-             (musicChunk_ != nullptr);
+    ready_ = (flap_ != nullptr) || (collide_ != nullptr) || (pass_ != nullptr) ||
+             (music_ != nullptr) || (musicChunk_ != nullptr);
     return ready_;
 }
 
@@ -94,6 +102,10 @@ void Audio::shutdown() {
         Mix_FreeChunk(collide_);
         collide_ = nullptr;
     }
+    if (pass_) {
+        Mix_FreeChunk(pass_);
+        pass_ = nullptr;
+    }
     if (opened_) {
         Mix_CloseAudio();
         opened_ = false;
@@ -115,6 +127,8 @@ void Audio::play(SoundId id) {
             chunk = collide_;
             break;
         case SoundId::Score:
+            chunk = pass_;
+            break;
         case SoundId::Die:
             break;
     }
