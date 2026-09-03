@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Flying Speed
+GenericName=Arcade Game
+Comment=Dodge obstacles and fly as far as you can!
+Exec=flying-speed
+Icon=flying-speed
+Terminal=false
+Categories=Game;ArcadeGame;
+Keywords=bird;flappy;arcade;speed;

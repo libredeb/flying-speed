@@ -73,3 +73,14 @@ add_custom_command(TARGET flying-speed POST_BUILD
 
 install(TARGETS flying-speed RUNTIME DESTINATION bin)
 install(DIRECTORY assets DESTINATION share/flying-speed)
+
+if(UNIX AND NOT APPLE)
+    install(FILES flying-speed.desktop
+            DESTINATION share/applications)
+    install(FILES assets/icon.png
+            DESTINATION share/icons/hicolor/192x192/apps
+            RENAME flying-speed.png)
+    install(FILES assets/icon.png
+            DESTINATION share/pixmaps
+            RENAME flying-speed.png)
+endif()

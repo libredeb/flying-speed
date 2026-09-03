@@ -48,8 +48,7 @@ brew install cmake sdl2 sdl2_image sdl2_ttf sdl2_mixer pkg-config
 ## Build and run
 
 ```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j
+make            # configure + build
 ./build/flying-speed
 ```
 
@@ -59,6 +58,35 @@ Options:
 ./build/flying-speed --windowed   # 720x720 development window
 ./build/flying-speed --help
 ```
+
+## Install (Linux)
+
+```bash
+sudo make install          # installs to /usr/local by default
+```
+
+This installs:
+
+| What | Where |
+| --- | --- |
+| Binary | `/usr/local/bin/flying-speed` |
+| Assets | `/usr/local/share/flying-speed/assets/` |
+| Desktop entry | `/usr/local/share/applications/flying-speed.desktop` |
+| Icon | `/usr/local/share/icons/hicolor/192x192/apps/flying-speed.png` |
+
+Custom prefix:
+
+```bash
+sudo make install PREFIX=/usr
+```
+
+To remove everything:
+
+```bash
+sudo make uninstall
+```
+
+## Asset lookup
 
 Assets are looked up in this order:
 
