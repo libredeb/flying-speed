@@ -10,16 +10,38 @@
 
 namespace flying {
 
-bool Game::init(SDL_Renderer* renderer) {
+bool Game::init(SDL_Renderer* renderer, ProgressFn progress) {
     renderer_ = renderer;
-    if (!assets_.load(renderer_)) {
+
+    constexpr int kAssetSteps = Assets::kLoadSteps;
+    constexpr int kTotalSteps = kAssetSteps + 2;
+
+    if (progress) {
+        progress(0, kTotalSteps);
+    }
+
+    auto assetProgress = progress
+        ? ProgressFn([&](int step, int /*assetTotal*/) {
+              progress(step, kTotalSteps);
+          })
+        : nullptr;
+
+    if (!assets_.load(renderer_, assetProgress)) {
         return false;
     }
+
     audio_.init(assets_.root);
+    if (progress) {
+        progress(kAssetSteps + 1, kTotalSteps);
+    }
+
     parallax_.init(assets_);
     pipes_.init(assets_);
     best_ = loadBestScore();
     resetToTitle();
+    if (progress) {
+        progress(kTotalSteps, kTotalSteps);
+    }
     return true;
 }
 

@@ -79,24 +79,32 @@ SDL_Texture* makeTrailDot(SDL_Renderer* renderer) {
 
 }  // namespace
 
-bool Assets::load(SDL_Renderer* renderer) {
+bool Assets::load(SDL_Renderer* renderer, ProgressFn progress) {
     root = findAssetsRoot();
+
+    int step = 0;
+    auto advance = [&]() {
+        ++step;
+        if (progress) {
+            progress(step, kLoadSteps);
+        }
+    };
 
     auto p = [&](const char* name) { return root + "/" + name; };
 
-    bird = loadTexture(renderer, p("bird.png"));
-    clouds = loadTexture(renderer, p("clouds.png"));
-    farBuildings = loadTexture(renderer, p("far_buildings.png"));
-    nearBuildings = loadTexture(renderer, p("near_buildings.png"));
-    trees = loadTexture(renderer, p("trees.png"));
-    greenHead = loadTexture(renderer, p("green_head_pipe.png"));
-    greenBody = loadTexture(renderer, p("green_body_pipe.png"));
-    blueHead = loadTexture(renderer, p("blue_head_pipe.png"));
-    blueBody = loadTexture(renderer, p("blue_body_pipe.png"));
-    yellowHead = loadTexture(renderer, p("yellow_head_pipe.png"));
-    yellowBody = loadTexture(renderer, p("yellow_body_pipe.png"));
-    sky = makeSky(renderer);
-    trailDot = makeTrailDot(renderer);
+    bird = loadTexture(renderer, p("bird.png")); advance();
+    clouds = loadTexture(renderer, p("clouds.png")); advance();
+    farBuildings = loadTexture(renderer, p("far_buildings.png")); advance();
+    nearBuildings = loadTexture(renderer, p("near_buildings.png")); advance();
+    trees = loadTexture(renderer, p("trees.png")); advance();
+    greenHead = loadTexture(renderer, p("green_head_pipe.png")); advance();
+    greenBody = loadTexture(renderer, p("green_body_pipe.png")); advance();
+    blueHead = loadTexture(renderer, p("blue_head_pipe.png")); advance();
+    blueBody = loadTexture(renderer, p("blue_body_pipe.png")); advance();
+    yellowHead = loadTexture(renderer, p("yellow_head_pipe.png")); advance();
+    yellowBody = loadTexture(renderer, p("yellow_body_pipe.png")); advance();
+    sky = makeSky(renderer); advance();
+    trailDot = makeTrailDot(renderer); advance();
 
     auto nearest = [](SDL_Texture* tex) {
         if (tex) {
@@ -110,9 +118,9 @@ bool Assets::load(SDL_Renderer* renderer) {
     nearest(yellowHead);
     nearest(yellowBody);
 
-    fontTitle = TTF_OpenFont(p("Bird.ttf").c_str(), 112);
-    fontUi = TTF_OpenFont(p("Bird.ttf").c_str(), 52);
-    fontScore = TTF_OpenFont(p("Bird.ttf").c_str(), 128);
+    fontTitle = TTF_OpenFont(p("Bird.ttf").c_str(), 112); advance();
+    fontUi = TTF_OpenFont(p("Bird.ttf").c_str(), 52); advance();
+    fontScore = TTF_OpenFont(p("Bird.ttf").c_str(), 128); advance();
     if (!fontTitle || !fontUi || !fontScore) {
         std::fprintf(stderr, "Aviso: no se pudo abrir Bird.ttf (%s)\n", TTF_GetError());
     }

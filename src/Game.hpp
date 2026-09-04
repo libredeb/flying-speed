@@ -15,7 +15,7 @@ namespace flying {
 
 class Game {
 public:
-    bool init(SDL_Renderer* renderer);
+    bool init(SDL_Renderer* renderer, ProgressFn progress = nullptr);
     void shutdown();
 
     void handleInput(const Input& input);

@@ -117,8 +117,43 @@ int main(int argc, char** argv) {
     flying::Input input;
     input.init();
 
+    auto renderLoading = [&](int step, int total) {
+        SDL_PumpEvents();
+
+        SDL_SetRenderDrawColor(renderer, 18, 28, 58, 255);
+        SDL_RenderClear(renderer);
+
+        const float pct = (total > 0)
+            ? static_cast<float>(step) / static_cast<float>(total)
+            : 0.f;
+
+        constexpr int kBarW = 340;
+        constexpr int kBarH = 12;
+        constexpr int kBarX = (flying::kLogicalW - kBarW) / 2;
+        constexpr int kBarY = flying::kLogicalH / 2 + 60;
+        constexpr int kPad = 2;
+
+        SDL_Rect outline{kBarX - kPad, kBarY - kPad,
+                         kBarW + kPad * 2, kBarH + kPad * 2};
+        SDL_SetRenderDrawColor(renderer, 60, 80, 120, 255);
+        SDL_RenderFillRect(renderer, &outline);
+
+        SDL_Rect bg{kBarX, kBarY, kBarW, kBarH};
+        SDL_SetRenderDrawColor(renderer, 10, 16, 32, 255);
+        SDL_RenderFillRect(renderer, &bg);
+
+        const int fillW = static_cast<int>(pct * kBarW);
+        if (fillW > 0) {
+            SDL_Rect fill{kBarX, kBarY, fillW, kBarH};
+            SDL_SetRenderDrawColor(renderer, 255, 214, 90, 255);
+            SDL_RenderFillRect(renderer, &fill);
+        }
+
+        SDL_RenderPresent(renderer);
+    };
+
     flying::Game game;
-    if (!game.init(renderer)) {
+    if (!game.init(renderer, renderLoading)) {
         std::fprintf(stderr, "No se pudieron cargar los recursos.\n");
         input.shutdown();
         SDL_DestroyRenderer(renderer);

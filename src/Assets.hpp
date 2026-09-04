@@ -2,9 +2,12 @@
 
 #include <SDL.h>
 #include <SDL_ttf.h>
+#include <functional>
 #include <string>
 
 namespace flying {
+
+using ProgressFn = std::function<void(int current, int total)>;
 
 struct Assets {
     SDL_Texture* bird = nullptr;
@@ -27,7 +30,9 @@ struct Assets {
 
     std::string root;
 
-    bool load(SDL_Renderer* renderer);
+    static constexpr int kLoadSteps = 16;
+
+    bool load(SDL_Renderer* renderer, ProgressFn progress = nullptr);
     void unload();
 };
 
