@@ -14,8 +14,7 @@ bool Game::init(SDL_Renderer* renderer, ProgressFn progress) {
     renderer_ = renderer;
 
     constexpr int kAssetSteps = Assets::kLoadSteps;
-    constexpr int kAudioSteps = Audio::kLoadSteps;
-    constexpr int kTotalSteps = kAssetSteps + kAudioSteps + 1;
+    constexpr int kTotalSteps = kAssetSteps + 2;
 
     if (progress) {
         progress(0, kTotalSteps);
@@ -31,13 +30,10 @@ bool Game::init(SDL_Renderer* renderer, ProgressFn progress) {
         return false;
     }
 
-    auto audioProgress = progress
-        ? ProgressFn([&](int step, int /*audioTotal*/) {
-              progress(kAssetSteps + step, kTotalSteps);
-          })
-        : nullptr;
-
-    audio_.init(assets_.root, audioProgress);
+    audio_.init(assets_.root);
+    if (progress) {
+        progress(kAssetSteps + 1, kTotalSteps);
+    }
 
     parallax_.init(assets_);
     pipes_.init(assets_);

@@ -13,15 +13,7 @@ constexpr int kMusicVolume = 42;  // ~33% so flap/collide stay in front
 
 }  // namespace
 
-bool Audio::init(const std::string& assetsRoot, ProgressFn progress) {
-    int step = 0;
-    auto advance = [&]() {
-        ++step;
-        if (progress) {
-            progress(step, kLoadSteps);
-        }
-    };
-
+bool Audio::init(const std::string& assetsRoot) {
     const int want = MIX_INIT_OGG;
     if ((Mix_Init(want) & want) != want) {
         std::fprintf(stderr, "Aviso Mix_Init OGG: %s\n", Mix_GetError());
@@ -36,82 +28,63 @@ bool Audio::init(const std::string& assetsRoot, ProgressFn progress) {
 
     Mix_AllocateChannels(16);
     Mix_Volume(-1, kSfxVolume);
-    advance();
 
     const std::string flapPath = assetsRoot + "/flap.wav";
     const std::string collidePath = assetsRoot + "/collide.wav";
     const std::string passPath = assetsRoot + "/pass.wav";
+    const std::string musicPath = assetsRoot + "/background.ogg";
 
     flap_ = Mix_LoadWAV(flapPath.c_str());
+    collide_ = Mix_LoadWAV(collidePath.c_str());
+    pass_ = Mix_LoadWAV(passPath.c_str());
     if (!flap_) {
         std::fprintf(stderr, "No se pudo cargar %s: %s\n", flapPath.c_str(), Mix_GetError());
-    } else {
-        Mix_VolumeChunk(flap_, kSfxVolume);
     }
-    advance();
-
-    collide_ = Mix_LoadWAV(collidePath.c_str());
     if (!collide_) {
         std::fprintf(stderr, "No se pudo cargar %s: %s\n", collidePath.c_str(), Mix_GetError());
-    } else {
-        Mix_VolumeChunk(collide_, kSfxVolume);
     }
-    advance();
-
-    pass_ = Mix_LoadWAV(passPath.c_str());
     if (!pass_) {
         std::fprintf(stderr, "No se pudo cargar %s: %s\n", passPath.c_str(), Mix_GetError());
-    } else {
+    }
+    if (flap_) {
+        Mix_VolumeChunk(flap_, kSfxVolume);
+    }
+    if (collide_) {
+        Mix_VolumeChunk(collide_, kSfxVolume);
+    }
+    if (pass_) {
         Mix_VolumeChunk(pass_, kSfxVolume);
     }
-    advance();
 
-    ready_ = (flap_ != nullptr) || (collide_ != nullptr) || (pass_ != nullptr);
-
-    const std::string musicPath = assetsRoot + "/background.ogg";
-    musicThread_ = std::thread([this, musicPath]() {
-        if (shutdownRequested_.load()) {
-            return;
+    music_ = Mix_LoadMUS(musicPath.c_str());
+    if (music_) {
+        Mix_VolumeMusic(kMusicVolume);
+        if (Mix_PlayMusic(music_, -1) != 0) {
+            std::fprintf(stderr, "Mix_PlayMusic: %s\n", Mix_GetError());
         }
-        music_ = Mix_LoadMUS(musicPath.c_str());
-        if (music_) {
-            if (shutdownRequested_.load()) {
-                return;
-            }
-            Mix_VolumeMusic(kMusicVolume);
-            if (Mix_PlayMusic(music_, -1) != 0) {
-                std::fprintf(stderr, "Mix_PlayMusic: %s\n", Mix_GetError());
-            }
+    } else {
+        musicChunk_ = Mix_LoadWAV(musicPath.c_str());
+        if (!musicChunk_) {
+            std::fprintf(stderr, "No se pudo cargar %s: %s\n", musicPath.c_str(), Mix_GetError());
         } else {
-            musicChunk_ = Mix_LoadWAV(musicPath.c_str());
-            if (!musicChunk_) {
-                std::fprintf(stderr, "No se pudo cargar %s: %s\n",
-                             musicPath.c_str(), Mix_GetError());
-            } else if (!shutdownRequested_.load()) {
-                Mix_VolumeChunk(musicChunk_, kMusicVolume);
-                musicChannel_.store(Mix_PlayChannel(-1, musicChunk_, -1));
-                if (musicChannel_.load() < 0) {
-                    std::fprintf(stderr, "Mix_PlayChannel musica: %s\n", Mix_GetError());
-                }
+            Mix_VolumeChunk(musicChunk_, kMusicVolume);
+            musicChannel_ = Mix_PlayChannel(-1, musicChunk_, -1);
+            if (musicChannel_ < 0) {
+                std::fprintf(stderr, "Mix_PlayChannel musica: %s\n", Mix_GetError());
             }
         }
-        musicReady_.store(true);
-    });
+    }
 
+    ready_ = (flap_ != nullptr) || (collide_ != nullptr) || (pass_ != nullptr) ||
+             (music_ != nullptr) || (musicChunk_ != nullptr);
     return ready_;
 }
 
 void Audio::shutdown() {
-    shutdownRequested_.store(true);
-    if (musicThread_.joinable()) {
-        musicThread_.join();
-    }
-
     Mix_HaltMusic();
-    const int ch = musicChannel_.load();
-    if (ch >= 0) {
-        Mix_HaltChannel(ch);
-        musicChannel_.store(-1);
+    if (musicChannel_ >= 0) {
+        Mix_HaltChannel(musicChannel_);
+        musicChannel_ = -1;
     }
     if (music_) {
         Mix_FreeMusic(music_);
@@ -173,15 +146,13 @@ void Audio::setMuted(bool muted) {
 void Audio::setPaused(bool paused) {
     if (paused) {
         Mix_PauseMusic();
-        const int ch = musicChannel_.load();
-        if (ch >= 0) {
-            Mix_Pause(ch);
+        if (musicChannel_ >= 0) {
+            Mix_Pause(musicChannel_);
         }
     } else if (!muted_) {
         Mix_ResumeMusic();
-        const int ch = musicChannel_.load();
-        if (ch >= 0) {
-            Mix_Resume(ch);
+        if (musicChannel_ >= 0) {
+            Mix_Resume(musicChannel_);
         }
     }
 }
