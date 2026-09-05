@@ -1,8 +1,12 @@
 #pragma once
 
-#include <string>
+#include "Assets.hpp"
 
 #include <SDL_mixer.h>
+
+#include <atomic>
+#include <string>
+#include <thread>
 
 namespace flying {
 
@@ -15,7 +19,9 @@ enum class SoundId {
 
 class Audio {
 public:
-    bool init(const std::string& assetsRoot);
+    static constexpr int kLoadSteps = 4;
+
+    bool init(const std::string& assetsRoot, ProgressFn progress = nullptr);
     void shutdown();
     void play(SoundId id);
     void setMuted(bool muted);
@@ -28,10 +34,14 @@ private:
     Mix_Chunk* pass_ = nullptr;
     Mix_Music* music_ = nullptr;
     Mix_Chunk* musicChunk_ = nullptr;
-    int musicChannel_ = -1;
+    std::atomic<int> musicChannel_{-1};
     bool muted_ = false;
     bool ready_ = false;
     bool opened_ = false;
+
+    std::thread musicThread_;
+    std::atomic<bool> musicReady_{false};
+    std::atomic<bool> shutdownRequested_{false};
 };
 
 }  // namespace flying

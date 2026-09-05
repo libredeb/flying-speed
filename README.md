@@ -99,7 +99,7 @@ Assets are looked up in this order:
 
 ## Sound
 
-- `assets/background.ogg` looping background music (low volume)
-- `assets/flap.flac` when flying (Space)
-- `assets/pass.mp3` when passing through a pipe
+- `assets/background.ogg` looping background music (low volume, loaded in background thread)
+- `assets/flap.wav` when flying (Space)
+- `assets/pass.wav` when passing through a pipe
 - `assets/collide.wav` when hitting a pipe or the screen edge
